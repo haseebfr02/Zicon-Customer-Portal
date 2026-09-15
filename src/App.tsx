@@ -11,7 +11,6 @@ import {
   Gauge,
   Globe2,
   HelpCircle,
-  KeyRound,
   LayoutDashboard,
   LifeBuoy,
   LockKeyhole,
@@ -41,23 +40,33 @@ type Announcement = {
 
 type IconType = typeof Code2;
 
+type NavItemData = {
+  label: string;
+  icon: IconType;
+  href?: string;
+};
+
 const defaultAnnouncements: Announcement[] = [
   { id: 'bolt', title: 'ZiCON Bolt v2.0 is now live!', description: 'New features and smarter AI assistance.', published_label: '2 days ago', icon: 'bolt' },
   { id: 'maintenance', title: 'Platform Maintenance', description: 'Scheduled maintenance on Aug 30, 02:00 AM PKT', published_label: '4 days ago', icon: 'lock' },
   { id: 'docs', title: 'New Documentation', description: 'Updated guides for deployment and scaling.', published_label: '1 week ago', icon: 'document' },
 ];
 
-const mainNavigation = [
+const mainNavigation: NavItemData[] = [
   { label: 'Dashboard', icon: LayoutDashboard },
 ];
 
-const productNavigation = [
+const productNavigation: NavItemData[] = [
   { label: 'IDE', icon: TerminalSquare },
   { label: 'ZiCON Bolt', icon: Zap },
-  { label: 'ZiCON Developer Portal', icon: Cloud },
+  {
+    label: 'ZiCON Developer Portal',
+    icon: Cloud,
+    href: 'https://zicon-developer-portal.vercel.app/',
+  },
 ];
 
-const manageNavigation = [
+const manageNavigation: NavItemData[] = [
   { label: 'Projects', icon: Box },
   { label: 'Deployments', icon: Rocket },
   { label: 'Environments', icon: Activity },
@@ -133,7 +142,13 @@ function App() {
 
         <div className="nav-area">
           <NavGroup items={mainNavigation} activeItem={activeItem} onChoose={chooseItem} />
-          <NavSection title="PRODUCTS & SERVICES" items={productNavigation} activeItem={activeItem} onChoose={chooseItem} />
+          <NavSection
+            title="PRODUCTS & SERVICES"
+            items={productNavigation}
+            activeItem={activeItem}
+            onChoose={chooseItem}
+            onExternalNavigate={() => setMobileMenuOpen(false)}
+          />
           <NavSection title="MANAGE" items={manageNavigation} activeItem={activeItem} onChoose={chooseItem} />
         </div>
 
@@ -226,16 +241,91 @@ function App() {
   );
 }
 
-function NavGroup({ items, activeItem, onChoose }: { items: { label: string; icon: IconType }[]; activeItem: string; onChoose: (label: string) => void }) {
-  return <nav className="nav-group">{items.map((item) => <NavItem key={item.label} {...item} active={item.label === activeItem} onChoose={onChoose} />)}</nav>;
+function NavGroup({
+  items,
+  activeItem,
+  onChoose,
+  onExternalNavigate,
+}: {
+  items: NavItemData[];
+  activeItem: string;
+  onChoose: (label: string) => void;
+  onExternalNavigate?: () => void;
+}) {
+  return (
+    <nav className="nav-group">
+      {items.map((item) => (
+        <NavItem
+          key={item.label}
+          {...item}
+          active={item.label === activeItem}
+          onChoose={onChoose}
+          onExternalNavigate={onExternalNavigate}
+        />
+      ))}
+    </nav>
+  );
 }
 
-function NavSection({ title, items, activeItem, onChoose }: { title: string; items: { label: string; icon: IconType }[]; activeItem: string; onChoose: (label: string) => void }) {
-  return <div className="nav-section"><div className="nav-label">{title}</div><NavGroup items={items} activeItem={activeItem} onChoose={onChoose} /></div>;
+function NavSection({
+  title,
+  items,
+  activeItem,
+  onChoose,
+  onExternalNavigate,
+}: {
+  title: string;
+  items: NavItemData[];
+  activeItem: string;
+  onChoose: (label: string) => void;
+  onExternalNavigate?: () => void;
+}) {
+  return (
+    <div className="nav-section">
+      <div className="nav-label">{title}</div>
+      <NavGroup
+        items={items}
+        activeItem={activeItem}
+        onChoose={onChoose}
+        onExternalNavigate={onExternalNavigate}
+      />
+    </div>
+  );
 }
 
-function NavItem({ label, icon: Icon, active, onChoose }: { label: string; icon: IconType; active: boolean; onChoose: (label: string) => void }) {
-  return <button className={`nav-item ${active ? 'active' : ''}`} onClick={() => onChoose(label)}><Icon size={17} strokeWidth={active ? 2.2 : 1.8} /><span>{label}</span></button>;
+function NavItem({
+  label,
+  icon: Icon,
+  active,
+  onChoose,
+  href,
+  onExternalNavigate,
+}: NavItemData & {
+  active: boolean;
+  onChoose: (label: string) => void;
+  onExternalNavigate?: () => void;
+}) {
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`nav-item ${active ? 'active' : ''}`}
+        onClick={onExternalNavigate}
+      >
+        <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
+        <span>{label}</span>
+      </a>
+    );
+  }
+
+  return (
+    <button className={`nav-item ${active ? 'active' : ''}`} onClick={() => onChoose(label)}>
+      <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
+      <span>{label}</span>
+    </button>
+  );
 }
 
 function SectionTitle({ children }: { children: ReactNode }) {
